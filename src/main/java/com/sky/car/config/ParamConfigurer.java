@@ -1,7 +1,6 @@
 package com.sky.car.config;
 
 
-import com.sky.car.interceptor.ParamInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;

@@ -1,6 +1,5 @@
 package com.sky.car.business.entity.order;
 
-import com.alibaba.fastjson.annotation.JSONField;
 import com.baomidou.mybatisplus.annotations.TableField;
 import com.baomidou.mybatisplus.annotations.TableName;
 import com.baomidou.mybatisplus.enums.FieldFill;
@@ -38,7 +37,7 @@ public class OrderDishReq {
     private Integer num;
     @ApiModelProperty(name="state" , value="菜品状态：1、有效；2、无效")
     private Integer state;
-    @TableField(value="createTime" , fill= FieldFill.INSERT)
+    @TableField(value="creatTime" , fill= FieldFill.INSERT)
     @ApiModelProperty(name="creatTime" , value="记录创建时间")
     @JsonFormat(timezone="GMT+8",pattern="yyyy-MM-dd HH:mm:ss")
     private Date creatTime;
@@ -51,6 +50,16 @@ public class OrderDishReq {
 
     public List<OrderDish> getOrderDishList() {
         return orderDishList;
+    }
+
+    private Integer flag;
+
+    public Integer getFlag() {
+        return flag;
+    }
+
+    public void setFlag(Integer flag) {
+        this.flag = flag;
     }
 
     public void setOrderDishList(List<OrderDish> orderDishList) {

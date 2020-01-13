@@ -42,7 +42,7 @@ public class OrderDish implements Serializable {
     @ApiModelProperty(name="dishId" , value="菜品id")
     private Integer dishId;
     @ApiModelProperty(name="dishName" , value="菜品名称")
-    private Integer dishName;
+    private String dishName;
     @ApiModelProperty(name="price" , value="菜品单价")
     @JSONField(format = "#.00")
     private BigDecimal price;
@@ -50,7 +50,7 @@ public class OrderDish implements Serializable {
     private Integer num;
     @ApiModelProperty(name="state" , value="菜品状态：1、有效；2、无效")
     private Integer state;
-    @TableField(value="createTime" , fill= FieldFill.INSERT)
+    @TableField(value="creatTime" , fill= FieldFill.INSERT)
     @ApiModelProperty(name="creatTime" , value="记录创建时间")
     @JsonFormat(timezone="GMT+8",pattern="yyyy-MM-dd HH:mm:ss")
     private Date creatTime;
@@ -91,11 +91,11 @@ public class OrderDish implements Serializable {
         this.dishId = dishId;
     }
 
-    public Integer getDishName() {
+    public String getDishName() {
         return dishName;
     }
 
-    public void setDishName(Integer dishName) {
+    public void setDishName(String dishName) {
         this.dishName = dishName;
     }
 

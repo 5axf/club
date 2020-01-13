@@ -2,6 +2,7 @@ package com.sky.car.business.api.wx;
 
 
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
+import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.sky.car.business.entity.user.User;
 import com.sky.car.business.service.UserTokenService;
 import com.sky.car.business.service.user.UserService;
@@ -17,8 +18,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.baomidou.mybatisplus.mapper.Wrapper;
-
 @RestController
 @RequestMapping("/wx/user/")
 @Validated
@@ -27,8 +26,6 @@ public class WxUserController {
     @Autowired UserService userService;
 
     @Autowired UserTokenService userTokenService;
-
-
 
     @ApiOperation(value="更新用户信息" , notes="修改头像/真实姓名/电话号码" ,
     response= Result.class , httpMethod = "POST")
@@ -77,14 +74,11 @@ public class WxUserController {
             return Result.failResult("token为空");
         }
         UserToken userToken = userTokenService.checkToken(body.getToken());
-        if (null == userToken) {
+        if (Utils.isEmpty(userToken)) {
             return Result.tokenInvalidResult();
         }
 
-        Wrapper<User> wrapper = new EntityWrapper<>();
-        wrapper.eq("userid", userToken.getUserId());
-
-        User user = userService.selectOne(wrapper);
+        User user = userService.selectById(userToken.getUserId());
         if(Utils.isEmpty(user)){
             return Result.failResult("用户信息错误!");
         }

@@ -6,13 +6,9 @@ import com.baomidou.mybatisplus.plugins.Page;
 import com.sky.car.business.entity.recharge.Recharge;
 import com.sky.car.business.entity.recharge.RechargeReq;
 import com.sky.car.business.entity.recharge.RechargeRes;
-import com.sky.car.business.entity.room.Room;
-import com.sky.car.business.entity.room.RoomReq;
-import com.sky.car.business.entity.room.RoomRes;
 import com.sky.car.business.entity.user.User;
 import com.sky.car.business.service.AdminTokenService;
 import com.sky.car.business.service.recharge.RechargeService;
-import com.sky.car.business.service.room.RoomService;
 import com.sky.car.business.service.user.UserService;
 import com.sky.car.common.Result;
 import com.sky.car.util.PageUtils;
@@ -29,12 +25,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @RestController
 @RequestMapping("/admin/recharge/")
-@Api(tags = { "后台管理-房间管理接口" })
+@Api(tags = { "后台管理-充值记录管理接口" })
 public class RechargeController {
 
     @Autowired

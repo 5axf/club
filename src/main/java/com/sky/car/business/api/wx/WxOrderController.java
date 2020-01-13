@@ -6,10 +6,7 @@ import com.sky.car.business.entity.food.Dish;
 import com.sky.car.business.entity.food.DishReq;
 import com.sky.car.business.entity.food.Menu;
 import com.sky.car.business.entity.hours.Hours;
-import com.sky.car.business.entity.order.AddOrderReq;
-import com.sky.car.business.entity.order.Order;
-import com.sky.car.business.entity.order.OrderDish;
-import com.sky.car.business.entity.room.Room;
+import com.sky.car.business.entity.order.*;
 import com.sky.car.business.entity.user.UserRes;
 import com.sky.car.business.service.UserTokenService;
 import com.sky.car.business.service.food.DishService;
@@ -33,10 +30,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @RestController
 @RequestMapping("/wx/order/")
@@ -113,7 +107,106 @@ public class WxOrderController {
        return orderService.addOrder(body);
     }
 
+    @ApiOperation(value="查询所有订单" , notes="根据用户查询所有订单" ,
+            response= Result.class , httpMethod = "POST")
+    @RequestMapping(value = "findOrderByUser", method = RequestMethod.POST)
+    public Result findOrderByUser(@RequestBody AddOrderReq body){
+        if(Utils.isEmpty(body.getToken())) {
+            return Result.failResult("token为空");
+        }
+        UserToken userToken = userTokenService.checkToken(body.getToken());
+        if (Utils.isEmpty(userToken)) {
+            return Result.tokenInvalidResult();
+        }
+        UserRes userRes = (UserRes) userToken.getSessionMap().get(userToken.getSessionKey());
+        Wrapper<Order> wrapper = new EntityWrapper<>();
+        wrapper.ne("state",7);
+        wrapper.eq("userId",userRes.getUserid());
+        wrapper.orderBy("creaTime",false);
+        List<Order> orders = orderService.selectList(wrapper);
+        if (Utils.isEmpty(orders) || orders.size() == 0){
+            return Result.successResult("暂无订单");
+        }
+        List<FindOrderRes> list = new ArrayList<>();
+        for (Order order : orders) {
+            FindOrderRes orderRes = new FindOrderRes();
+            Hours hours = hoursService.selectById(order.getHoursId());
+            BeanUtils.copyProperties(order, orderRes);
+            orderRes.setHoursName(hours.getHoursName());
+            list.add(orderRes);
+        }
+        return Result.successResult(list);
+    }
 
+    @ApiOperation(value="用戶取消预订单操作" , notes="用戶取消预订单操作" ,
+            response= Result.class , httpMethod = "POST")
+    @RequestMapping(value = "cancelOrder", method = RequestMethod.POST)
+    public Result cancelOrder(@RequestBody OrderReq body){
+        if(Utils.isEmpty(body.getToken())) {
+            return Result.failResult("token为空");
+        }
+        UserToken userToken = userTokenService.checkToken(body.getToken());
+        if (Utils.isEmpty(userToken)) {
+            return Result.tokenInvalidResult();
+        }
+        UserRes userRes = (UserRes) userToken.getSessionMap().get(userToken.getSessionKey());
+        if (Utils.isEmpty(body.getOrderId())){
+            return Result.failResult("参数为空");
+        }
+        Order order = orderService.selectById(body.getOrderId());
+        if (Utils.isEmpty(order)){
+            return Result.failResult("订单错误");
+        }
+        if (order.getState() == 2){
+            return Result.failResult("预订单已取消");
+        }else if (order.getState() != 1){
+            return Result.failResult("该订单不可取消");
+        }
+        order.setState(2);
+        order.setUpdateTime(new Date());
+        boolean b = orderService.updateById(order);
+        if (b){
+            return Result.successResult("操作成功");
+        }
+        return Result.failResult("操作失败");
+    }
 
+    @ApiOperation(value="查询订单详情" , notes="查询单个订单详情" ,
+            response= Result.class , httpMethod = "POST")
+    @RequestMapping(value = "findOneOredrRes", method = RequestMethod.POST)
+    public Result findOneOredrRes(@RequestBody OrderReq body){
+        if(Utils.isEmpty(body.getToken())) {
+            return Result.failResult("token为空");
+        }
+        UserToken userToken = userTokenService.checkToken(body.getToken());
+        if (Utils.isEmpty(userToken)) {
+            return Result.tokenInvalidResult();
+        }
+        UserRes userRes = (UserRes) userToken.getSessionMap().get(userToken.getSessionKey());
+        if (Utils.isEmpty(body.getOrderId())){
+            return Result.failResult("参数为空");
+        }
+        Order order = orderService.selectById(body.getOrderId());
+        if (Utils.isEmpty(order)){
+            return Result.failResult("订单错误");
+        }
+        Wrapper<OrderDish> wrapper = new EntityWrapper<>();
+        wrapper.eq("orderId",order.getOrderId());
+        wrapper.eq("state",1);
+        List<OrderDish> orderDishes = orderDishService.selectList(wrapper);
+        Hours hours = hoursService.selectById(order.getHoursId());
+        Map map = new HashMap<>();
+        map.put("order",order);
+        map.put("dish",orderDishes);
+        map.put("hours",hours);
+        return Result.successResult(map);
+    }
+
+    @ApiOperation(value="用戶结算订单" , notes="用戶结算订单" ,
+            response= Result.class , httpMethod = "POST")
+    @RequestMapping(value = "accountOrder", method = RequestMethod.POST)
+    public Result accountOrder(@RequestBody OrderReq body){
+        return orderService.accountOrder(body);
+    }
 
 }

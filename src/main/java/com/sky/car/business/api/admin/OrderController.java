@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.rmi.CORBA.Util;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -51,10 +50,6 @@ public class OrderController {
     @RequestMapping(value = "queryOrderList", method = RequestMethod.POST)
     public Result queryOrderList(@RequestBody OrderReq body){
 
-//        AdminToken adminToken = adminTokenService.checkToken(body.getToken());
-//        if(Utils.isEmpty(adminToken)) {
-//            return Result.tokenInvalidResult();
-//        }
         Wrapper<Order> wrapper = new EntityWrapper<>();
 
         if(Utils.isNotEmpty(body.getOrderNum())){
@@ -69,6 +64,7 @@ public class OrderController {
         if(Utils.isNotEmpty(body.getPhone())){
             wrapper.le("phone", body.getPhone());
         }
+        wrapper.ne("state", 7);
         wrapper.orderBy("creatTime", false);
         Page<Order> page = PageUtils.newInstant().getPage(body.getCurrent(), body.getSize());
         page = orderService.selectPage(page, wrapper);
@@ -134,12 +130,7 @@ public class OrderController {
             @ApiImplicitParam(name = "orderId",value = "订单id",required = true),
     })
     @RequestMapping(value = "updateOrderState", method = RequestMethod.POST)
-    public Result updateOrder(@RequestBody OrderReq body){
-
-//        AdminToken adminToken = adminTokenService.checkToken(body.getToken());
-//        if(Utils.isEmpty(adminToken)) {
-//            return Result.tokenInvalidResult();
-//        }
+    public Result updateOrderState(@RequestBody OrderReq body){
 
         if(Utils.isEmpty(body.getOrderId())){
             return Result.failResult("参数orderId不能为空");
@@ -147,6 +138,9 @@ public class OrderController {
         Order order = orderService.selectById(body.getOrderId());
         if(Utils.isEmpty(order)){
             return Result.failResult("订单不存在");
+        }
+        if (order.getState() == 6){
+            return Result.failResult("订单已结束，无法修改");
         }
         if(Utils.isNotEmpty(body.getState())){
             order.setState(body.getState());
@@ -182,27 +176,8 @@ public class OrderController {
     @RequestMapping(value = "addOrderDish", method = RequestMethod.POST)
     public Result addOrderDish(@RequestBody OrderDishReq body){
 
-//        AdminToken adminToken = adminTokenService.checkToken(body.getToken());
-//        if(Utils.isEmpty(adminToken)) {
-//            return Result.tokenInvalidResult();
-//        }
-        if(Utils.isEmpty(body.getOrderId())){
-            return Result.failResult("参数orderId不能为空");
-        }
-        Order order = orderService.selectById(body.getOrderId());
-        if(Utils.isEmpty(order)){
-            return Result.failResult("订单不存在");
-        }
-        OrderDish orderDish = new OrderDish();
-        BeanUtils.copyProperties(body, orderDish);
-        orderDish.setState(1);
-        orderDish.setCreatTime(new Date());
-        boolean insert = orderDishService.insert(orderDish);;
-        if(insert){
-            return Result.successResult("添加成功");
-        }else {
-            return Result.failResult("添加失败");
-        }
+        return orderDishService.addOrderDish(body);
+
     }
 
     @ApiOperation(value="根据订单id批量添加订单详情（加菜，代客点单）" , notes="根据订单id批量添加订单详情" , response= Result.class , httpMethod = "POST")
@@ -221,19 +196,10 @@ public class OrderController {
         if(Utils.isEmpty(body.getOrderId())){
             return Result.failResult("参数orderId不能为空");
         }
-        Order order = orderService.selectById(body.getOrderId());
-        if(Utils.isEmpty(order)){
-            return Result.failResult("订单不存在");
+        if(Utils.isEmpty(body.getOrderDishList())){
+            return Result.failResult("参数orderDishList不能为空");
         }
-        if(Utils.isNotEmpty(body.getOrderDishList())){
-            boolean b = orderDishService.insertBatch(body.getOrderDishList());
-            if(b){
-                return Result.successResult("批量添加成功");
-            }else {
-                return Result.failResult("批量添加失败");
-            }
-        }
-        return Result.failResult("批量添加失败");
+        return orderDishService.addOrderDishBatch(body);
     }
 
     @ApiOperation(value="修改订单（菜品）" , notes="更改订单状态，数量等" , response= Result.class , httpMethod = "POST")
@@ -261,7 +227,36 @@ public class OrderController {
         if(Utils.isNotEmpty(body.getNum())){
             orderDish.setNum(body.getNum());
         }
+        orderDish.setUpdateTime(new Date());
+        boolean update = orderDishService.updateById(orderDish);
+        if(update){
+            return Result.successResult("修改订单详情状态成功");
+        }else {
+            return Result.failResult("修改订单详情状态失败");
+        }
+    }
 
+    @ApiOperation(value="修改订单（菜品）数量" , notes="更改订单数量" , response= Result.class , httpMethod = "POST")
+    @ApiImplicitParams(value = {
+            @ApiImplicitParam(name = "token",value = "登录标识",required = true),
+            @ApiImplicitParam(name = "orderDishId",value = "订单菜品id",required = true),
+            @ApiImplicitParam(name = "flag",value = "标识，菜数量加减（1，表示数量加；2，表示数量减）",required = true),
+    })
+    @RequestMapping(value = "updateOrderDishNum", method = RequestMethod.POST)
+    public Result updateOrderDishNum(@RequestBody OrderDishReq body){
+
+        if(Utils.isEmpty(body.getOrderDishId())){
+            return Result.failResult("参数orderDishId不能为空");
+        }
+        OrderDish orderDish = orderDishService.selectById(body.getOrderDishId());
+        if(Utils.isEmpty(orderDish)){
+            return Result.failResult("订单详情菜品不存在");
+        }
+        if(1 == body.getFlag()){
+            orderDish.setNum(orderDish.getNum() + 1);
+        }else if(2 == body.getFlag()){
+            orderDish.setNum(orderDish.getNum() - 1);
+        }
         orderDish.setUpdateTime(new Date());
         boolean update = orderDishService.updateById(orderDish);
         if(update){

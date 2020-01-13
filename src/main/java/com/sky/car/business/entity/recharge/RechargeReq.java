@@ -31,7 +31,7 @@ public class RechargeReq implements Serializable {
     @ApiModelProperty(name="userId" , value="用户id")
     private Integer userId;
     @ApiModelProperty(name="amount" , value="充值金额")
-    private BigDecimal amount;
+    private String amount;
     @ApiModelProperty(name="payType" , value="充值方式：1、微信支付")
     private Integer payType;
     @ApiModelProperty(name="balance" , value="充值前账户余额")
@@ -59,11 +59,18 @@ public class RechargeReq implements Serializable {
     @ApiModelProperty(name="size" , value="每页记录")
     private int size;
 
-
     @JsonFormat(timezone="GMT+8",pattern="yyyy-MM-dd")
     private Date startTime;
     @JsonFormat(timezone="GMT+8",pattern="yyyy-MM-dd")
     private Date endTime;
+
+    public String getAmount() {
+        return amount;
+    }
+
+    public void setAmount(String amount) {
+        this.amount = amount;
+    }
 
     public Date getStartTime() {
         return startTime;
@@ -127,14 +134,6 @@ public class RechargeReq implements Serializable {
 
     public void setUserId(Integer userId) {
         this.userId = userId;
-    }
-
-    public BigDecimal getAmount() {
-        return amount;
-    }
-
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
     }
 
     public Integer getPayType() {

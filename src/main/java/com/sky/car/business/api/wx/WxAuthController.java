@@ -136,6 +136,21 @@ public class WxAuthController {
 		}
 		return Result.tokenInvalidResult();
 	}
+    @ApiOperation(value="检测用户登录状态" , notes="" , response= UserRes.class , httpMethod = "POST")
+    @PostMapping(value = "checkTokenNew")
+    public Result checkTokenNew(@RequestBody LogoutUserReq body) {
+        if(Utils.isEmpty(body.getToken())) {
+            return Result.paramInvalidResult("参数不能为空");
+        }
+
+        UserToken userToken = tokenService.checkToken(body.getToken());
+        if(userToken!=null) {
+            UserRes userRes = (UserRes) userToken.getSessionMap().get(userToken.getSessionKey());
+            userRes.setExpireString(DateUtil.timestampToDate(userToken.getExpire()));
+            return Result.successResult(userRes);
+        }
+        return Result.tokenInvalidResult();
+    }
 
 
 	@ApiOperation(value="用户绑定手机号码" , notes="" , response= UserRes.class , httpMethod = "POST")

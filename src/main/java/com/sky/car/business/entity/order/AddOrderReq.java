@@ -9,6 +9,8 @@ import java.util.List;
 
 public class AddOrderReq {
 
+    private Integer oldOrderId;
+
     private String token;
 
     private List<DishReq> list;
@@ -30,6 +32,13 @@ public class AddOrderReq {
 
     private Integer isDish;
 
+    public Integer getOldOrderId() {
+        return oldOrderId;
+    }
+
+    public void setOldOrderId(Integer oldOrderId) {
+        this.oldOrderId = oldOrderId;
+    }
 
     public Integer getIsDish() {
         return isDish;

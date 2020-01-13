@@ -36,7 +36,7 @@ public class OrderDishRes {
     private Integer num;
     @ApiModelProperty(name="state" , value="菜品状态：1、有效；2、无效")
     private Integer state;
-    @TableField(value="createTime" , fill= FieldFill.INSERT)
+    @TableField(value="creatTime" , fill= FieldFill.INSERT)
     @ApiModelProperty(name="creatTime" , value="记录创建时间")
     @JsonFormat(timezone="GMT+8",pattern="yyyy-MM-dd HH:mm:ss")
     private Date creatTime;

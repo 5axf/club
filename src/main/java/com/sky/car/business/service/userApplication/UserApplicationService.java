@@ -24,15 +24,15 @@
 
 package com.sky.car.business.service.userApplication;
 
+import com.baomidou.mybatisplus.mapper.EntityWrapper;
+import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.sky.car.business.entity.user.User;
 import com.sky.car.business.entity.userApplication.UserApplication;
 import com.sky.car.business.entity.userApplication.UserApplicationReq;
 import com.sky.car.business.mapper.userApplication.UserApplicationMapper;
 import com.sky.car.business.service.AdminTokenService;
 import com.sky.car.business.service.user.UserService;
-import com.sky.car.common.AdminToken;
 import com.sky.car.common.Result;
-import com.sky.car.common.UserToken;
 import com.sky.car.common.base.BaseMapper;
 import com.sky.car.common.base.BaseService;
 import com.sky.car.util.Utils;
@@ -42,6 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Date;
+import java.util.Random;
 
 @Service
 public class UserApplicationService extends BaseService<UserApplicationMapper, UserApplication> {
@@ -99,6 +100,18 @@ public class UserApplicationService extends BaseService<UserApplicationMapper, U
 		if(Utils.isEmpty(user)){
 			return Result.failResult("用户不存在");
 		}
+
+		Wrapper<UserApplication> wrapper = new EntityWrapper<>();
+		wrapper.eq("userId", body.getUserId());
+		UserApplication userApplication1 = userApplicationService.selectOne(wrapper);
+		if(Utils.isNotEmpty(userApplication1)){
+			if(userApplication1.getStatus() == 1){
+				return Result.failResult("申请审核中，请勿重复提交");
+			}else if(userApplication1.getStatus() == 2){
+				return Result.failResult("已是会员");
+			}
+		}
+
 		boolean flag = false;
 		user.setStatus(3);//审核中
 		user.setRealName(body.getRealName());
@@ -121,24 +134,41 @@ public class UserApplicationService extends BaseService<UserApplicationMapper, U
 		}
 	}
 
+	/**
+	 * 获取四位随机数
+	 * @return
+	 */
 	public String getCardNo(){
-		String str  = System.currentTimeMillis()+"";
-		str = str.substring(str.length()-4, str.length());
+		Random random = new Random();
+		String str  = (random.nextInt(9000))+1000 +"";
 		while (str.contains("4")){
-			str  = System.currentTimeMillis()+"";
-			str = str.substring(str.length()-4, str.length());
+			str  = (random.nextInt(9000))+1000 +"";
 		}
 		return "VIP"+str;
 	}
 
 	public static void main(String[] args) {
-		String str  = System.currentTimeMillis()+"";
-		str = str.substring(str.length()-4, str.length());
-		while (str.contains("4")){
-			str  = System.currentTimeMillis()+"";
-			str = str.substring(str.length()-4, str.length());
+
+//		UUID uuid = UUID.randomUUID();
+//		System.out.printf("=======>:"+uuid);
+		while (true){
+			try {
+				Thread.currentThread().sleep(1000);
+				Random random = new Random();
+				String str  = (random.nextInt(9000))+1000 +"";
+				while (str.contains("4")){
+					str  = (random.nextInt(9000))+1000 +"";
+				}
+				System.out.println("===>:"+str);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
-		System.out.println("VIP"+str);
+
 	}
+
+
+
+
 
 }

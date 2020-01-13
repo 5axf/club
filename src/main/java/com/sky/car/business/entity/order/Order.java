@@ -58,8 +58,8 @@ public class Order implements Serializable {
     private String remark;
     @ApiModelProperty(name="childNum" , value="小孩数量")
     private Integer childNum;
-    @TableField(value="createTime" , fill= FieldFill.INSERT)
-    @ApiModelProperty(name="creatTime" , value="记录创建时间")
+    @TableField(value="creaTime" , fill= FieldFill.INSERT)
+    @ApiModelProperty(name="creaTime" , value="记录创建时间")
     @JsonFormat(timezone="GMT+8",pattern="yyyy-MM-dd HH:mm:ss")
     private Date creatTime;
     @TableField(value="updatetime" , fill=FieldFill.INSERT_UPDATE)
@@ -72,6 +72,16 @@ public class Order implements Serializable {
     private Date orderDate;
 
     private Integer isDish;
+
+    private BigDecimal curBalance;
+
+    public BigDecimal getCurBalance() {
+        return curBalance;
+    }
+
+    public void setCurBalance(BigDecimal curBalance) {
+        this.curBalance = curBalance;
+    }
 
     public Integer getIsDish() {
         return isDish;

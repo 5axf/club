@@ -49,7 +49,7 @@ public class OrderRes {
     private String remark;
     @ApiModelProperty(name="childNum" , value="小孩数量")
     private Integer childNum;
-    @TableField(value="createTime" , fill= FieldFill.INSERT)
+    @TableField(value="creatTime" , fill= FieldFill.INSERT)
     @ApiModelProperty(name="creatTime" , value="记录创建时间")
     @JsonFormat(timezone="GMT+8",pattern="yyyy-MM-dd HH:mm:ss")
     private Date creatTime;

@@ -1,10 +1,6 @@
 package com.sky.car.util;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
@@ -12,16 +8,9 @@ import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.TreeMap;
-
-import javax.servlet.http.HttpServletRequest;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class StringUtils {
 
@@ -30,7 +19,33 @@ public class StringUtils {
 			+ "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ").toCharArray();
 	private static char[] numbers = ("0123456789").toCharArray();
 
-	
+
+	public static boolean isRecharge(String str){
+		Pattern pattern=Pattern.compile("^(([1-9]{1}\\d*)|([0]{1}))(\\.(\\d){0,2})?$"); // 判断小数点后2位的数字的正则表达式
+		Matcher match=pattern.matcher(str);
+		if(match.matches()==false){
+			return false;
+		}else{
+			return true;
+		}
+	}
+	/**
+	 * StringUtils工具类方法
+	 * 获取一定长度的随机字符串，范围0-9，a-z
+	 * @param length：指定字符串长度
+	 * @return 一定长度的随机字符串
+	 */
+	public static String getRandomStringByLength(int length) {
+		String base = "abcdefghijklmnopqrstuvwxyz0123456789";
+		Random random = new Random();
+		StringBuffer sb = new StringBuffer();
+		for (int i = 0; i < length; i++) {
+			int number = random.nextInt(base.length());
+			sb.append(base.charAt(number));
+		}
+		return sb.toString();
+	}
+
 	//字符串切分方法（字符串  切分符号  ）
 	public static String[] mySplit(String srcStr,String token){
 		int fromIndex = 0;
