@@ -3,8 +3,12 @@ package com.sky.car.business.api.admin;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.baomidou.mybatisplus.plugins.Page;
+import com.sky.car.business.entity.hours.Hours;
 import com.sky.car.business.entity.order.*;
+import com.sky.car.business.entity.user.User;
 import com.sky.car.business.service.AdminTokenService;
+import com.sky.car.business.service.food.DishService;
+import com.sky.car.business.service.hours.HoursService;
 import com.sky.car.business.service.order.OrderDishService;
 import com.sky.car.business.service.order.OrderService;
 import com.sky.car.business.service.user.UserService;
@@ -22,9 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @RestController
 @RequestMapping("/admin/order/")
@@ -39,6 +41,10 @@ public class OrderController {
     private OrderService orderService;
     @Autowired
     private OrderDishService orderDishService;
+    @Autowired
+    private DishService dishService;
+    @Autowired
+    private HoursService hoursService;
 
     @ApiOperation(value="查询订单列表" , notes="查询订单列表" , response= Result.class , httpMethod = "POST")
     @ApiImplicitParams(value = {
@@ -56,16 +62,19 @@ public class OrderController {
             wrapper.eq("orderNum", body.getOrderNum());
         }
         if(Utils.isNotEmpty(body.getStartTime())){
-            wrapper.ge("creatTime", body.getStartTime());
+            wrapper.ge("creaTime", body.getStartTime());
         }
         if(Utils.isNotEmpty(body.getEndTime())){
-            wrapper.le("creatTime", body.getEndTime());
+            wrapper.le("creaTime", body.getEndTime());
         }
         if(Utils.isNotEmpty(body.getPhone())){
-            wrapper.le("phone", body.getPhone());
+            wrapper.eq("phone", body.getPhone());
+        }
+        if(Utils.isNotEmpty(body.getState())){
+            wrapper.eq("state", body.getState());
         }
         wrapper.ne("state", 7);
-        wrapper.orderBy("creatTime", false);
+        wrapper.orderBy("creaTime", false);
         Page<Order> page = PageUtils.newInstant().getPage(body.getCurrent(), body.getSize());
         page = orderService.selectPage(page, wrapper);
         Page<OrderRes> pageRes = PageUtils.newInstant().getPage(body.getCurrent(), body.getSize());
@@ -78,6 +87,16 @@ public class OrderController {
             for(Order order : page.getRecords()) {
                 orderRes = new OrderRes();
                 BeanUtils.copyProperties(order, orderRes);
+                User user = userService.selectById(order.getUserId());
+                if (Utils.isEmpty(user.getRealName())){
+                    orderRes.setUserName(user.getNickName());
+                }else {
+                    orderRes.setUserName(user.getRealName());
+                    orderRes.setCardNo(user.getCardNo());
+                }
+
+                Hours hours = hoursService.selectById(order.getHoursId());
+                orderRes.setHourName(hours.getHoursName());
                 Wrapper<OrderDish> wrapper1 = new EntityWrapper<>();
                 wrapper1.eq("orderId", order.getOrderId());
                 wrapper1.eq("state", 1);//查询有效数据
@@ -100,10 +119,7 @@ public class OrderController {
     @RequestMapping(value = "queryOrderDetail", method = RequestMethod.POST)
     public Result queryOrderDetail(@RequestBody OrderReq body){
 
-//        AdminToken adminToken = adminTokenService.checkToken(body.getToken());
-//        if(Utils.isEmpty(adminToken)) {
-//            return Result.tokenInvalidResult();
-//        }
+        Map<String,Object> returnMap = new HashMap<>();
         if(Utils.isEmpty(body.getOrderId())){
             return Result.failResult("参数orderId不能为空");
         }
@@ -111,18 +127,26 @@ public class OrderController {
         if(Utils.isEmpty(order)){
             return Result.failResult("订单不存在");
         }
-
+        Wrapper<Hours> wrapper = new EntityWrapper<>();
+        wrapper.eq("hoursId", order.getHoursId());
+        Hours hours = hoursService.selectOne(wrapper);
+        returnMap.put("hours",hours);
+        returnMap.put("order", order);
         Wrapper<OrderDish> wrapper1 = new EntityWrapper<>();
         wrapper1.eq("orderId", order.getOrderId());
         wrapper1.eq("state", 1);//查询有效数据
         List<OrderDish> orderDishes = orderDishService.selectList(wrapper1);
         if(Utils.isNotEmpty(orderDishes)){
-            return Result.successResult(orderDishes);
+            returnMap.put("orderDishes",orderDishes);
+            return Result.successResult(returnMap);
         }else {
             return Result.failResult("暂无数据");
         }
 
     }
+
+
+
 
     @ApiOperation(value="修改订单" , notes="更改订单状态，人数等" , response= Result.class , httpMethod = "POST")
     @ApiImplicitParams(value = {
@@ -144,6 +168,10 @@ public class OrderController {
         }
         if(Utils.isNotEmpty(body.getState())){
             order.setState(body.getState());
+            if(body.getState() == 6){
+                order.setPayWey(2);
+                order.setPayTime(new Date());
+            }
         }
         if(Utils.isNotEmpty(body.getUseNum())){
             order.setUseNum(body.getUseNum());
@@ -161,23 +189,6 @@ public class OrderController {
         }else {
             return Result.failResult("修改订单状态失败");
         }
-    }
-
-    @ApiOperation(value="根据订单id添加订单详情（加菜，代客点单）" , notes="根据订单id添加订单详情" , response= Result.class , httpMethod = "POST")
-    @ApiImplicitParams(value = {
-            @ApiImplicitParam(name = "token",value = "登录标识",required = true),
-            @ApiImplicitParam(name = "orderId",value = "订单id",required = true),
-            @ApiImplicitParam(name = "orderNum",value = "订单编号",required = true),
-            @ApiImplicitParam(name = "dishId",value = "菜品id",required = true),
-            @ApiImplicitParam(name = "dishName",value = "菜品名",required = true),
-            @ApiImplicitParam(name = "price",value = "菜品单价",required = true),
-            @ApiImplicitParam(name = "num",value = "数量",required = true),
-    })
-    @RequestMapping(value = "addOrderDish", method = RequestMethod.POST)
-    public Result addOrderDish(@RequestBody OrderDishReq body){
-
-        return orderDishService.addOrderDish(body);
-
     }
 
     @ApiOperation(value="根据订单id批量添加订单详情（加菜，代客点单）" , notes="根据订单id批量添加订单详情" , response= Result.class , httpMethod = "POST")
@@ -199,8 +210,19 @@ public class OrderController {
         if(Utils.isEmpty(body.getOrderDishList())){
             return Result.failResult("参数orderDishList不能为空");
         }
-        return orderDishService.addOrderDishBatch(body);
+        Result result = orderDishService.addOrderDishBatch(body);
+        if(result.getCode() == 0){
+            boolean b = orderDishService.RecalculatedAmount((Order) result.getData());
+            if(b){
+                return Result.successResult("批量添加成功");
+            }else {
+                return Result.failResult("批量添加失败");
+            }
+        }
+        return result;
     }
+
+
 
     @ApiOperation(value="修改订单（菜品）" , notes="更改订单状态，数量等" , response= Result.class , httpMethod = "POST")
     @ApiImplicitParams(value = {
@@ -266,4 +288,10 @@ public class OrderController {
         }
     }
 
+    @ApiOperation(value="服务员再次下单" , notes="服务员再次下单" ,
+            response= Result.class , httpMethod = "POST")
+    @RequestMapping(value = "againOrder", method = RequestMethod.POST)
+    public Result againOrder(@RequestBody AddOrderReq body) {
+        return orderService.againOrder(body);
+    }
 }

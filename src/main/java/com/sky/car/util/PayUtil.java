@@ -35,8 +35,9 @@ public class PayUtil {
      * @return 签名结果
      */
     public static boolean verify(String text, String sign, String key, String input_charset) {
-        text = text + key;
+        text = text + "&key=" + key;
         String mysign = DigestUtils.md5Hex(getContentBytes(text, input_charset));
+        mysign = mysign.toUpperCase();
         if (mysign.equals(sign)) {
             return true;
         } else {
@@ -215,7 +216,6 @@ public class PayUtil {
                 sb.append("</" + name + ">");
             }
         }
-
         return sb.toString();
     }
 }

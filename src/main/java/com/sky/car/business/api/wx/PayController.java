@@ -81,9 +81,13 @@ public class PayController {
         recharge.setCreateTime(new Date());
         rechargeService.insert(recharge);
 
-        BigDecimal decimal = new BigDecimal(amount);
-        BigDecimal fen = new BigDecimal("100");
-        BigDecimal price = decimal.multiply(fen);
+//        BigDecimal decimal = new BigDecimal(amount);
+//        BigDecimal fen = new BigDecimal("100");
+//        BigDecimal price = decimal.multiply(fen);
+
+        Double aDouble = Double.valueOf(amount);
+        double temp = aDouble * 100;
+        int price = (int) temp;
         try {
 
             //生成的随机字符串
@@ -162,6 +166,8 @@ public class PayController {
     //这里是支付回调接口，微信支付成功后会自动调用
     @RequestMapping(value = "/wxNotify", method = RequestMethod.POST)
     public void wxNotify(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        System.out.println("============================================回调了======================================");
+
         BufferedReader br = new BufferedReader(new InputStreamReader(request.getInputStream()));
         String line = null;
         StringBuilder sb = new StringBuilder();
@@ -174,14 +180,17 @@ public class PayController {
         String resXml = "";
 
         Map map = PayUtil.doXMLParse(notityXml);
-
         String returnCode = (String) map.get("return_code");
+
+
         if ("SUCCESS".equals(returnCode)) {
             //验证签名是否正确
             Map<String, String> validParams = PayUtil.paraFilter(map);  //回调验签时需要去除sign和空值参数
             String prestr = PayUtil.createLinkString(validParams);
+            String mapstr = PayUtil.createLinkString(map);
+            String sign = (String) map.get("sign");
             //根据微信官网的介绍，此处不仅对回调的参数进行验签，还需要对返回的金额与系统订单的金额进行比对等
-            if (PayUtil.verify(prestr, (String) map.get("sign"), WxPayConfig.key, "utf-8")) {
+            if (PayUtil.verify(prestr, sign, WxPayConfig.key, "utf-8")) {
                 //注意要判断微信支付重复回调，支付成功后微信会重复的进行回调
                 String outTradeNo = validParams.get("out_trade_no");
                 String transactionId = validParams.get("transaction_id");
@@ -190,9 +199,11 @@ public class PayController {
                 Recharge recharge = rechargeService.selectOne(wrapper);
                 if(recharge.getStatus() == 2){
                     // 返回的总金额
+                    System.out.println("============================================返回的总金额======================================");
                     String total_fee = validParams.get("total_fee");
                     BigDecimal totalFee = new BigDecimal(total_fee);
-                    BigDecimal amount = recharge.getAmount();
+                    BigDecimal temp = recharge.getAmount();
+                    BigDecimal amount = temp.multiply(new BigDecimal("100"));
                     if (totalFee.compareTo(amount) != 0){
                         resXml = "<xml>" + "<return_code><![CDATA[FAIL]]></return_code>"
                                 + "<return_msg><![CDATA[金额不一致]]></return_msg>" + "</xml> ";
@@ -203,9 +214,10 @@ public class PayController {
                         rechargeService.updateById(recharge);
                         User user = userService.selectById(recharge.getUserId());
                         BigDecimal oldBalance = user.getBalance();
-                        BigDecimal newBalance = oldBalance.add(amount);
+                        BigDecimal newBalance = oldBalance.add(temp);
                         user.setBalance(newBalance);
                         user.setUpdateTime(new Date());
+                        userService.updateById(user);
                     }
                     /**此处添加自己的业务逻辑代码end**/
                     //通知微信服务器已经支付成功
@@ -215,6 +227,9 @@ public class PayController {
                     resXml = "<xml>" + "<return_code><![CDATA[FAIL]]></return_code>"
                             + "<return_msg><![CDATA[充值已结束]]></return_msg>" + "</xml> ";
                 }
+            }else {
+                resXml = "<xml>" + "<return_code><![CDATA[FAIL]]></return_code>"
+                        + "<return_msg><![CDATA[签名校验失败]]></return_msg>" + "</xml> ";
             }
         } else {
             resXml = "<xml>" + "<return_code><![CDATA[FAIL]]></return_code>"

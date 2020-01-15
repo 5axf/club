@@ -1,6 +1,5 @@
 package com.sky.car.business.entity.order;
 
-import com.alibaba.fastjson.annotation.JSONField;
 import com.baomidou.mybatisplus.annotations.TableField;
 import com.baomidou.mybatisplus.annotations.TableId;
 import com.baomidou.mybatisplus.annotations.TableName;
@@ -61,7 +60,7 @@ public class Order implements Serializable {
     @TableField(value="creaTime" , fill= FieldFill.INSERT)
     @ApiModelProperty(name="creaTime" , value="记录创建时间")
     @JsonFormat(timezone="GMT+8",pattern="yyyy-MM-dd HH:mm:ss")
-    private Date creatTime;
+    private Date creaTime;
     @TableField(value="updatetime" , fill=FieldFill.INSERT_UPDATE)
     @ApiModelProperty(name="updateTime" , value="记录修改时间")
     @JsonFormat(timezone="GMT+8",pattern="yyyy-MM-dd HH:mm:ss")
@@ -74,6 +73,19 @@ public class Order implements Serializable {
     private Integer isDish;
 
     private BigDecimal curBalance;
+
+    @TableField(value="payTime" , fill=FieldFill.INSERT_UPDATE)
+    @ApiModelProperty(name="payTime" , value="记录修改时间")
+    @JsonFormat(timezone="GMT+8",pattern="yyyy-MM-dd HH:mm:ss")
+    private Date payTime;
+
+    public Date getPayTime() {
+        return payTime;
+    }
+
+    public void setPayTime(Date payTime) {
+        this.payTime = payTime;
+    }
 
     public BigDecimal getCurBalance() {
         return curBalance;
@@ -210,12 +222,12 @@ public class Order implements Serializable {
         this.childNum = childNum;
     }
 
-    public Date getCreatTime() {
-        return creatTime;
+    public Date getCreaTime() {
+        return creaTime;
     }
 
-    public void setCreatTime(Date creatTime) {
-        this.creatTime = creatTime;
+    public void setCreaTime(Date creaTime) {
+        this.creaTime = creaTime;
     }
 
     public Date getUpdateTime() {

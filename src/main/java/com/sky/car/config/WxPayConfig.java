@@ -8,7 +8,7 @@ public class WxPayConfig {
     //微信支付的商户密钥
     public static final String key = "Ty2020TiaNYuSports2clUb2golf2nET";
     //支付成功后的服务器回调url
-    public static final String notify_url = "/wx/pay/wxNotify";
+    public static final String notify_url = "https://club.tianyusports.com/wx/pay/wxNotify";
     //签名方式
     public static final String SIGNTYPE = "MD5";
     //交易类型

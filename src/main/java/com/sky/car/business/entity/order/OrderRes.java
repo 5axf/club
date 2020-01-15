@@ -58,6 +58,49 @@ public class OrderRes {
     @JsonFormat(timezone="GMT+8",pattern="yyyy-MM-dd HH:mm:ss")
     private Date updateTime;
 
+    private String userName;
+
+    private String hourName;
+
+    private String cardNo;
+
+    @ApiModelProperty(name="payTime" , value="记录修改时间")
+    @JsonFormat(timezone="GMT+8",pattern="yyyy-MM-dd HH:mm:ss")
+    private Date payTime;
+
+    public Date getPayTime() {
+        return payTime;
+    }
+
+    public void setPayTime(Date payTime) {
+        this.payTime = payTime;
+    }
+
+    public String getCardNo() {
+        return cardNo;
+    }
+
+    public void setCardNo(String cardNo) {
+        this.cardNo = cardNo;
+    }
+
+
+    public String getHourName() {
+        return hourName;
+    }
+
+    public void setHourName(String hourName) {
+        this.hourName = hourName;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
     private List<OrderDish> orderDishList;
 
     public List<OrderDish> getOrderDishList() {

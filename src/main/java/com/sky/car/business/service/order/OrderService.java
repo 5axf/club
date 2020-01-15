@@ -115,14 +115,14 @@ public class OrderService extends BaseService<OrderMapper, Order>{
         order.setHoursId(hours.getHoursId());
         order.setHourTime(hours.getHourseStartTime() + "-" + hours.getHourseEndTime());
         order.setOrderDate(body.getOrderDate());
-        order.setState(7); // 费单
+        order.setState(1);
         if (Utils.isNotEmpty(body.getRemark())){
             order.setRemark(body.getRemark());
         }
         if (Utils.isNotEmpty(body.getChildNum())){
             order.setChildNum(body.getChildNum());
         }
-        order.setCreatTime(new Date());
+        order.setCreaTime(new Date());
         order.setIsDish(body.getIsDish());
         this.insert(order);
         if (Utils.isNotEmpty(body.getList()) && body.getList().size() > 0){
@@ -143,6 +143,7 @@ public class OrderService extends BaseService<OrderMapper, Order>{
                 orderDish.setState(1);
                 orderDish.setCreatTime(new Date());
                 orderDish.setPrice(dish.getPrice());
+                orderDish.setDishImg(dish.getDishImg());
                 orderDishList.add(orderDish);
                 BigDecimal dishPrice = new BigDecimal(dish.getPrice() + "");
                 BigDecimal num = new BigDecimal(dishReq.getNum() + "");
@@ -223,6 +224,7 @@ public class OrderService extends BaseService<OrderMapper, Order>{
         order.setCurBalance(subtract);
         order.setUpdateTime(new Date());
         order.setOrderDate(new Date());
+        order.setPayTime(new Date());
         boolean b = this.updateById(order);
         if (b){
             user.setBalance(subtract);
@@ -266,7 +268,7 @@ public class OrderService extends BaseService<OrderMapper, Order>{
         order.setState(4);
         order.setRemark("这是增加订单，原订单是" + oldOrder.getOrderId());
         order.setChildNum(oldOrder.getChildNum());
-        order.setCreatTime(new Date());
+        order.setCreaTime(new Date());
         order.setIsDish(7);
         this.insert(order);
         if (Utils.isNotEmpty(body.getList()) && body.getList().size() > 0) {

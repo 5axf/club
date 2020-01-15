@@ -54,8 +54,8 @@ public class BillRes implements Comparable<BillRes> {
     @Override
     public int compareTo(BillRes o) {
         if (this.getTime().compareTo(o.getTime()) > 0){
-            return 1;
+            return -1;
         }
-        return 0;
+        return 1;
     }
 }

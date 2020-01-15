@@ -59,6 +59,16 @@ public class OrderDish implements Serializable {
     @JsonFormat(timezone="GMT+8",pattern="yyyy-MM-dd HH:mm:ss")
     private Date updateTime;
 
+    private String dishImg;
+
+    public String getDishImg() {
+        return dishImg;
+    }
+
+    public void setDishImg(String dishImg) {
+        this.dishImg = dishImg;
+    }
+
     public Integer getOrderDishId() {
         return orderDishId;
     }

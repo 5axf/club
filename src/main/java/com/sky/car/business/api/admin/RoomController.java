@@ -42,11 +42,6 @@ public class RoomController {
     })
     @RequestMapping(value = "queryRoom", method = RequestMethod.POST)
     public Result queryRoom(@RequestBody RoomReq body) {
-
-        AdminToken adminToken = adminTokenService.checkToken(body.getToken());
-        if(Utils.isEmpty(adminToken)) {
-            return Result.tokenInvalidResult();
-        }
         Wrapper<Room> wrapper = new EntityWrapper<>();
         if(Utils.isNotEmpty(body.getRoomName())) {
             wrapper.eq("roomName", body.getRoomName());
@@ -91,9 +86,6 @@ public class RoomController {
         }
         if (Utils.isEmpty(body.getRoomDes())) {
             return Result.failResult("房间描述不能为空");
-        }
-        if (Utils.isEmpty(body.getRoomImg())) {
-            return Result.failResult("房间图片不能为空");
         }
         Room room = new Room();
         BeanUtils.copyProperties(body, room);

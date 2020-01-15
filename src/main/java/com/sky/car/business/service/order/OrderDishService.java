@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 @Service
@@ -42,74 +43,6 @@ public class OrderDishService extends BaseService<OrderDishMapper,OrderDish> {
     @Autowired
     private DishService dishService;
 
-    /**
-     *
-     * @param body
-     * @return
-     */
-    @Transactional
-    public Result addOrderDish(@RequestBody OrderDishReq body){
-        Order order = orderService.selectById(body.getOrderId());
-        if(Utils.isEmpty(order)){
-            return Result.failResult("订单不存在");
-        }
-        Dish dish1 = dishService.selectById(body.getDishId());
-        if(Utils.isEmpty(dish1)){
-            return Result.failResult("所选菜不存在");
-        }
-        if(2 == dish1.getIsFrame()){
-            return Result.failResult("所选菜已下架");
-        }
-        Wrapper<OrderDish> wrapper = new EntityWrapper<>();
-        wrapper.eq("orderId", order.getOrderId());
-        List<OrderDish> orderDishes = orderDishService.selectList(wrapper);
-        OrderDish dish = null;
-        if(Utils.isNotEmpty(orderDishes)){
-            for(OrderDish orderDish : orderDishes){
-                if(orderDish.getDishId() == body.getDishId()){
-                    dish = orderDish;
-                }
-            }
-        }
-        if(Utils.isNotEmpty(dish)){
-            dish.setNum(body.getNum() + dish.getNum());
-            boolean update = orderDishService.updateById(dish);
-            if(update){
-                //添加成功之后重新计算订单总金额
-                boolean update2 = RecalculatedAmount(order);
-                if(update2){
-                    return Result.successResult("添加成功");
-                }else {
-                    return Result.failResult("添加失败");
-                }
-            }else {
-                return Result.failResult("添加失败");
-            }
-        }else {
-            OrderDish orderDish = new OrderDish();
-            orderDish.setOrderId(body.getOrderId());
-            orderDish.setOrderNum(body.getOrderNum());
-            orderDish.setDishId(dish.getDishId());
-            orderDish.setDishName(dish.getDishName());
-            orderDish.setPrice(dish.getPrice());
-            orderDish.setNum(body.getNum());
-            orderDish.setState(1);
-            orderDish.setCreatTime(new Date());
-            boolean insert = orderDishService.insert(orderDish);
-            if(insert){
-                //添加成功之后重新计算订单总金额
-                boolean update = RecalculatedAmount(order);
-                if(update){
-                    return Result.successResult("添加成功");
-                }else {
-                    return Result.failResult("添加失败");
-                }
-            }else {
-                return Result.failResult("添加失败");
-            }
-        }
-    }
-
     @Transactional
     public Result addOrderDishBatch(@RequestBody OrderDishReq body){
         Order order = orderService.selectById(body.getOrderId());
@@ -129,51 +62,43 @@ public class OrderDishService extends BaseService<OrderDishMapper,OrderDish> {
                     return Result.failResult("所选菜"+dish1.getDishName()+"已下架，请重新选择");
                 }
                 OrderDish orderDish = new OrderDish();
-                orderDish.setOrderId(body.getOrderId());
-                orderDish.setOrderNum(body.getOrderNum());
+                orderDish.setOrderId(dish.getOrderId());
+                orderDish.setOrderNum(dish.getOrderNum());
                 orderDish.setDishId(dish.getDishId());
                 orderDish.setDishName(dish.getDishName());
                 orderDish.setPrice(dish.getPrice());
-                orderDish.setNum(body.getNum());
+                orderDish.setNum(dish.getNum());
                 orderDish.setState(1);
+                orderDish.setDishImg(dish1.getDishImg());
                 orderDish.setCreatTime(new Date());
                 fromList.add(orderDish);
             }
-
             Wrapper<OrderDish> wrapper = new EntityWrapper<>();
             wrapper.eq("orderId", order.getOrderId());
             //原有的菜品列表
             List<OrderDish> orderDishes = orderDishService.selectList(wrapper);
 
-            //最终需要新增的菜品列表
-            List<OrderDish> tempList = new ArrayList<>();
             boolean b = false;
-
             if(Utils.isNotEmpty(orderDishes) && Utils.isNotEmpty(fromList)){
-                for (OrderDish od: orderDishes) {
-                    for (OrderDish d: fromList) {
+                Iterator<OrderDish> iterator = fromList.iterator();
+                while (iterator.hasNext()){
+                    OrderDish d = iterator.next();
+                    for (OrderDish od: orderDishes) {
                         if(od.getDishId() == d.getDishId()){
                             od.setNum(od.getNum() + d.getNum());
                             b = orderDishService.updateById(od);
-                        }else {
-                            d.setCreatTime(new Date());
-                            d.setState(1);
-                            tempList.add(d);
+                            if(b){
+                                iterator.remove();
+                            }
                         }
                     }
                 }
             }
-            if(Utils.isNotEmpty(tempList)){
-                b = orderDishService.insertBatch(tempList);
+            if(Utils.isNotEmpty(fromList)){
+                b = orderDishService.insertBatch(fromList);
             }
             if(b){
-                //添加成功之后重新计算订单总金额
-                boolean update = RecalculatedAmount(order);
-                if(update){
-                    return Result.successResult("批量添加成功");
-                }else {
-                    return Result.failResult("批量添加失败");
-                }
+                return Result.successResult(order);
             }else {
                 return Result.failResult("批量添加失败");
             }
